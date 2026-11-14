@@ -328,7 +328,7 @@ export const AppsCatalogView: React.FC<AppsCatalogViewProps> = ({ onOpenAuth }) 
                 {OWNER_INFO.nameAr} — <span className="font-latin font-semibold">{OWNER_INFO.nameEn}</span>
               </h3>
               <p className="mt-1 text-sm text-slate-600 dark:text-slate-300">
-                متاح للاستشارات الهندسية وتطوير أنظمة الجودة والتحول الرقمي للمصانع والشركات.
+                معاً نصنع الفرق — نحو كفاءة تشغيلية أعلى، جودة مستدامة، وابتكار هندسي مستمر.
               </p>
             </div>
           </div>
