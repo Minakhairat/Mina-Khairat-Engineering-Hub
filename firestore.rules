@@ -239,8 +239,7 @@ service cloud.firestore {
           && exists(/databases/$(database)/documents/users/$(userId));
 
         allow list: if isValidId(userId)
-          && (isOwner(userId) || isBootstrappedAdmin())
-          && exists(/databases/$(database)/documents/users/$(userId));
+          && (isOwner(userId) || isBootstrappedAdmin());
 
         allow create: if isValidId(userId) && isValidId(notificationId)
           && isOwner(userId)

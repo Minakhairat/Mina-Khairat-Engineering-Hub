@@ -35,8 +35,18 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
     try {
       await signInWithGoogle();
       onClose();
-    } catch {
-      setErrorMsg('تعذر إتمام تسجيل الدخول عبر Google، يرجى المحاولة مرة أخرى.');
+    } catch (err) {
+      const code = (err as { code?: string })?.code || '';
+      if (code === 'auth/unauthorized-domain') {
+        const host = typeof window !== 'undefined' ? window.location.hostname : '';
+        setErrorMsg(
+          `الدومين (${host}) غير مضاف بعد في Firebase Console → Authentication → Settings → Authorized domains.`
+        );
+      } else if (code === 'auth/popup-closed-by-user') {
+        setErrorMsg('تم إغلاق نافذة تسجيل الدخول قبل الإتمام.');
+      } else {
+        setErrorMsg('تعذر إتمام تسجيل الدخول عبر Google، يرجى المحاولة مرة أخرى.');
+      }
     } finally {
       setBusy(false);
     }

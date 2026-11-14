@@ -70,7 +70,7 @@ const PlatformShell: React.FC = () => {
             onClick={() => setSection('apps')}
             className="flex items-center gap-2.5 text-lg font-extrabold tracking-tight text-slate-900 dark:text-white whitespace-nowrap shrink-0 cursor-pointer"
           >
-            <img src="/icon.svg" alt="" className="h-8 w-8 rounded-lg shrink-0" />
+            <img src="./icon.svg" alt="" className="h-8 w-8 rounded-lg shrink-0" />
             <span>منصة مينا خيرت</span>
           </button>
 
@@ -133,7 +133,7 @@ const PlatformShell: React.FC = () => {
           onClick={() => setSection('apps')}
           className="flex items-center gap-2 text-sm font-extrabold text-slate-900 dark:text-white whitespace-nowrap shrink-0"
         >
-          <img src="/icon.svg" alt="" className="h-6 w-6 rounded-md shrink-0" />
+          <img src="./icon.svg" alt="" className="h-6 w-6 rounded-md shrink-0" />
           <span>منصة مينا خيرت</span>
         </button>
 
@@ -283,10 +283,51 @@ const PlatformShell: React.FC = () => {
   );
 };
 
+class AppErrorBoundary extends React.Component<
+  { children: React.ReactNode },
+  { hasError: boolean }
+> {
+  constructor(props: { children: React.ReactNode }) {
+    super(props);
+    this.state = { hasError: false };
+  }
+
+  static getDerivedStateFromError() {
+    return { hasError: true };
+  }
+
+  render() {
+    if (this.state.hasError) {
+      return (
+        <div className="min-h-screen flex items-center justify-center bg-slate-50 dark:bg-slate-950 p-6 text-center">
+          <div className="max-w-md rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-6 space-y-4">
+            <h1 className="text-lg font-bold text-slate-900 dark:text-white">
+              حدث خطأ غير متوقع في تحميل البيانات
+            </h1>
+            <p className="text-sm text-slate-600 dark:text-slate-300">
+              يرجى إعادة تحميل الصفحة للمتابعة.
+            </p>
+            <button
+              type="button"
+              onClick={() => window.location.reload()}
+              className="min-h-[42px] px-5 py-2 rounded-xl bg-blue-600 text-white text-sm font-semibold cursor-pointer"
+            >
+              إعادة تحميل الصفحة
+            </button>
+          </div>
+        </div>
+      );
+    }
+    return this.props.children;
+  }
+}
+
 export default function App() {
   return (
-    <PlatformProvider>
-      <PlatformShell />
-    </PlatformProvider>
+    <AppErrorBoundary>
+      <PlatformProvider>
+        <PlatformShell />
+      </PlatformProvider>
+    </AppErrorBoundary>
   );
 }

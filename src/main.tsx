@@ -3,6 +3,11 @@ import { registerSW } from 'virtual:pwa-register';
 import App from './App.tsx';
 import './index.css';
 
-registerSW({ immediate: true });
+registerSW({
+  immediate: true,
+  onRegisterError(error) {
+    console.warn('Service worker registration skipped:', error);
+  },
+});
 
 createRoot(document.getElementById('root')!).render(<App />);

@@ -48,8 +48,8 @@ export async function dispatchDeviceNotification(title: string, body: string, ur
       if (reg) {
         await reg.showNotification(title, {
           body,
-          icon: '/pwa-192x192.png',
-          badge: '/pwa-192x192.png',
+          icon: './pwa-192x192.png',
+          badge: './pwa-192x192.png',
           data: { url },
         });
         return;
@@ -57,7 +57,7 @@ export async function dispatchDeviceNotification(title: string, body: string, ur
     }
     new Notification(title, {
       body,
-      icon: '/pwa-192x192.png',
+      icon: './pwa-192x192.png',
     });
   } catch {
     // Silent fallback when OS notification channel is unavailable inside embedded frames

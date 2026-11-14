@@ -113,6 +113,7 @@ export const PlatformProvider: React.FC<{ children: React.ReactNode }> = ({ chil
   const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
   const [firestoreApps, setFirestoreApps] = useState<AppItem[]>([]);
   const [appsLoading, setAppsLoading] = useState(true);
+  const [adminAppsReady, setAdminAppsReady] = useState(false);
   const [notifications, setNotifications] = useState<BroadcastNotification[]>([]);
   const [readNotificationIds, setReadNotificationIds] = useState<Set<string>>(new Set());
   const [latestToast, setLatestToast] = useState<BroadcastNotification | null>(null);
@@ -207,6 +208,7 @@ export const PlatformProvider: React.FC<{ children: React.ReactNode }> = ({ chil
   // 3. Apps Catalog Listener (Active apps for all; All apps for Admin)
   useEffect(() => {
     setAppsLoading(true);
+    setAdminAppsReady(false);
     const appsCol = collection(db, 'apps');
     const appsQuery = isAdmin ? query(appsCol) : query(appsCol, where('isActive', '==', true));
 
@@ -217,6 +219,9 @@ export const PlatformProvider: React.FC<{ children: React.ReactNode }> = ({ chil
         items.sort((a, b) => (a.order ?? 999) - (b.order ?? 999));
         setFirestoreApps(items);
         setAppsLoading(false);
+        if (isAdmin) {
+          setAdminAppsReady(true);
+        }
       },
       (error) => {
         setAppsLoading(false);
@@ -229,29 +234,48 @@ export const PlatformProvider: React.FC<{ children: React.ReactNode }> = ({ chil
 
   // 4. Auto-seed Default Apps into Firestore on First Admin Login if Empty
   useEffect(() => {
-    if (!isAdmin || appsLoading || firestoreApps.length > 0 || seededOnceRef.current) return;
+    if (!isAdmin || !adminAppsReady || appsLoading || firestoreApps.length > 0 || seededOnceRef.current) return;
     seededOnceRef.current = true;
     void seedDefaultAppsInternal();
-  }, [isAdmin, appsLoading, firestoreApps.length]);
+  }, [isAdmin, adminAppsReady, appsLoading, firestoreApps.length]);
 
   const seedDefaultAppsInternal = async () => {
     if (!user || !isAdmin) return;
     for (const appItem of DEFAULT_APPS) {
       const ref = doc(db, 'apps', appItem.id);
       try {
-        await setDoc(ref, {
-          ...appItem,
-          createdBy: user.uid,
-          createdAt: serverTimestamp(),
-          updatedAt: serverTimestamp(),
-        });
+        const existingSnap = await getDoc(ref);
+        if (existingSnap.exists()) {
+          await updateDoc(ref, {
+            title: appItem.title,
+            titleAr: appItem.titleAr,
+            description: appItem.description,
+            url: appItem.url,
+            category: appItem.category,
+            iconType: appItem.iconType,
+            iconName: appItem.iconName,
+            iconUrl: appItem.iconUrl,
+            accentColor: appItem.accentColor,
+            order: appItem.order,
+            isActive: appItem.isActive,
+            featured: appItem.featured,
+            updatedAt: serverTimestamp(),
+          });
+        } else {
+          await setDoc(ref, {
+            ...appItem,
+            createdBy: user.uid,
+            createdAt: serverTimestamp(),
+            updatedAt: serverTimestamp(),
+          });
+        }
       } catch (error) {
-        handleFirestoreError(error, OperationType.CREATE, `apps/${appItem.id}`);
+        handleFirestoreError(error, OperationType.WRITE, `apps/${appItem.id}`);
       }
     }
   };
 
-  // 5. Broadcast Notifications + Read Receipts Listener (Verified Users)
+  // 5. Broadcast Notifications Listener (Verified Users)
   useEffect(() => {
     if (!authReady || !user || !isVerified) return;
 
@@ -289,6 +313,13 @@ export const PlatformProvider: React.FC<{ children: React.ReactNode }> = ({ chil
       }
     );
 
+    return () => unsubNotifs();
+  }, [authReady, user, isVerified, isAdmin]);
+
+  // 5b. Read Receipts Listener (Only after userProfile exists)
+  useEffect(() => {
+    if (!authReady || !user || !isVerified || !userProfile) return;
+
     const readCol = collection(db, 'users', user.uid, 'readNotifications');
     const unsubRead = onSnapshot(
       readCol,
@@ -302,11 +333,8 @@ export const PlatformProvider: React.FC<{ children: React.ReactNode }> = ({ chil
       }
     );
 
-    return () => {
-      unsubNotifs();
-      unsubRead();
-    };
-  }, [authReady, user, isVerified, isAdmin]);
+    return () => unsubRead();
+  }, [authReady, user, isVerified, userProfile]);
 
   // 6. Admin-Only Listeners: All Users & Activity Logs
   useEffect(() => {
