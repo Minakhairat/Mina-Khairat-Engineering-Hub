@@ -5,7 +5,7 @@ export const ADMIN_EMAIL = 'minakhairat1@gmail.com';
 export const OWNER_INFO = {
   nameAr: 'المهندس مينا خيرت',
   nameEn: 'Eng. Mina Khairat',
-  specialtyAr: 'استشاري ومهندس نظم التصنيع الرشيق واللين سيجما والتحول الصناعي الرقمي',
+  specialtyAr: 'مهندس عمليات و نظم التصنيع الرشيق واللين سيجما والتحول الصناعي الرقمي و الذكاء الاصطناعي',
   phone: '01200224513',
   internationalPhone: '+201200224513',
   whatsappUrl: 'https://wa.me/201200224513',
